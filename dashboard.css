@@ -216,3 +216,28 @@ button:hover {
   z-index: -1;
   background: transparent;
 }
+
+.graficos-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  background: var(--card, #141923);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 20px #00ffff33;
+}
+
+canvas {
+  max-width: 480px;
+  background: #0a0f1f;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.legenda {
+  color: #9aa9bb;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+}
