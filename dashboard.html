@@ -168,6 +168,213 @@
   const db = getFirestore(app);
   const storage = getStorage(app);
 
+  // === PARTE 2 CORRIGIDA: GRÁFICOS + EXPORT (COLE AQUI DENTRO DO SEU <script type="module">) ===
+
+// requer: Chart.js (cdn), XLSX (cdn), jsPDF (cdn) incluídos no HTML (você já tem essas tags).
+// usa a variável `db` já existente (getFirestore(app))
+
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+async function carregarProdutos() {
+  const qSnap = await getDocs(collection(db, "produtos"));
+  return qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// garante que os elementos da UI existam
+function ensureUI() {
+  // seção gráficos
+  let secG = document.getElementById("graficos");
+  if (!secG) {
+    secG = document.createElement("section");
+    secG.id = "graficos";
+    document.querySelector(".main").appendChild(secG);
+  }
+  secG.innerHTML = `
+    <h2>📊 Análise de Vencimentos</h2>
+    <div class="card chart-container">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">
+        <select id="filterLoja"><option value="">Todas as lojas</option></select>
+        <select id="filterSetor"><option value="">Todos os setores</option></select>
+        <button id="btnRefresh">🔄 Atualizar</button>
+      </div>
+      <canvas id="grafSetor" height="140"></canvas>
+      <canvas id="grafStatus" height="120" style="margin-top:18px;"></canvas>
+      <canvas id="grafLoja" height="120" style="margin-top:18px;"></canvas>
+    </div>
+  `;
+
+  // seção exportar
+  let secE = document.getElementById("exportar");
+  if (!secE) {
+    secE = document.createElement("section");
+    secE.id = "exportar";
+    document.querySelector(".main").appendChild(secE);
+  }
+  secE.innerHTML = `
+    <h2>📤 Exportar Dados</h2>
+    <div class="card">
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button id="btnPDF">📄 Gerar PDF</button>
+        <button id="btnExcel">📊 Exportar Excel</button>
+      </div>
+      <p style="margin-top:.6rem;color:var(--muted)">O PDF incluirá o logo da ValiTec MJ e tema dark/ciano.</p>
+    </div>
+  `;
+}
+
+let chartSetor = null;
+let chartStatus = null;
+let chartLoja = null;
+
+function destroyCharts() {
+  if (chartSetor) { chartSetor.destroy(); chartSetor = null; }
+  if (chartStatus) { chartStatus.destroy(); chartStatus = null; }
+  if (chartLoja) { chartLoja.destroy(); chartLoja = null; }
+}
+
+function buildCounts(produtos, lojaFilter = "", setorFilter = "") {
+  const contSetor = {};
+  const contStatus = {};
+  const contLoja = {};
+  produtos.forEach(p => {
+    if (lojaFilter && (p.loja || "") !== lojaFilter) return;
+    if (setorFilter && (p.setor || "") !== setorFilter) return;
+
+    const setor = p.setor || "Sem Setor";
+    const status = p.status || "sem status";
+    const loja = p.loja || "Sem Loja";
+
+    contSetor[setor] = (contSetor[setor] || 0) + 1;
+    contStatus[status] = (contStatus[status] || 0) + 1;
+    contLoja[loja] = (contLoja[loja] || 0) + 1;
+  });
+  return { contSetor, contStatus, contLoja };
+}
+
+async function popularFiltros(produtos) {
+  const selLoja = document.getElementById("filterLoja");
+  const selSetor = document.getElementById("filterSetor");
+  const lojas = Array.from(new Set(produtos.map(p => p.loja || "Sem Loja")));
+  const setores = Array.from(new Set(produtos.map(p => p.setor || "Sem Setor")));
+
+  // limpa e adiciona
+  selLoja.innerHTML = `<option value="">Todas as lojas</option>` + lojas.map(l => `<option value="${l}">${l}</option>`).join("");
+  selSetor.innerHTML = `<option value="">Todos os setores</option>` + setores.map(s => `<option value="${s}">${s}</option>`).join("");
+}
+
+function criarGraficos(contSetor, contStatus, contLoja) {
+  destroyCharts();
+
+  const ctxS = document.getElementById("grafSetor").getContext("2d");
+  chartSetor = new Chart(ctxS, {
+    type: "bar",
+    data: {
+      labels: Object.keys(contSetor),
+      datasets: [{ label: "Produtos por Setor", data: Object.values(contSetor), backgroundColor: "rgba(0,255,255,0.35)", borderColor: "#00ffff", borderWidth: 1 }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: "#00ffff" } } },
+      scales: {
+        x: { ticks: { color: "#fff" } },
+        y: { ticks: { color: "#fff" } }
+      }
+    }
+  });
+
+  const ctxSt = document.getElementById("grafStatus").getContext("2d");
+  chartStatus = new Chart(ctxSt, {
+    type: "pie",
+    data: { labels: Object.keys(contStatus), datasets: [{ data: Object.values(contStatus), backgroundColor: ["#00ffff","#ffa500","#00ff7f","#ff4444"] }] },
+    options: { plugins: { legend: { labels: { color: "#fff" } } } }
+  });
+
+  const ctxL = document.getElementById("grafLoja").getContext("2d");
+  chartLoja = new Chart(ctxL, {
+    type: "doughnut",
+    data: { labels: Object.keys(contLoja), datasets: [{ data: Object.values(contLoja), backgroundColor: ["#00ffff88","#0099ff88","#00557788"] }] },
+    options: { plugins: { legend: { labels: { color: "#fff" } } } }
+  });
+}
+
+async function atualizarPainel() {
+  const produtos = await carregarProdutos();
+  await popularFiltros(produtos);
+
+  const lojaFilter = document.getElementById("filterLoja")?.value || "";
+  const setorFilter = document.getElementById("filterSetor")?.value || "";
+
+  const { contSetor, contStatus, contLoja } = buildCounts(produtos, lojaFilter, setorFilter);
+  criarGraficos(contSetor, contStatus, contLoja);
+}
+
+// inicializa UI e eventos
+ensureUI();
+document.getElementById("btnRefresh")?.addEventListener("click", atualizarPainel);
+document.getElementById("filterLoja")?.addEventListener("change", atualizarPainel);
+document.getElementById("filterSetor")?.addEventListener("change", atualizarPainel);
+
+// hooks export
+document.getElementById("btnPDF")?.addEventListener("click", async () => {
+  const produtos = await carregarProdutos();
+  const { jsPDF } = window.jspdf || {};
+  if (!jsPDF) return alert("jsPDF não carregado");
+
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  // cabeçalho escuro
+  doc.setFillColor(10, 15, 21);
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 60, "F");
+  doc.setTextColor(0, 255, 255);
+  doc.setFontSize(16);
+  doc.text("ValiTec MJ — Relatório de Produtos", 40, 40);
+
+  // logo (se quiser usar PNG externo)
+  const logoUrl = "https://juan-rengel.github.io/MJTECNOLOGI2025/img/logo_valitec_mj.png";
+  try {
+    // tenta carregar imagem (assume CORS ok)
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = logoUrl;
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+    // desenha logo
+    doc.addImage(img, "PNG", doc.internal.pageSize.getWidth() - 110, 10, 80, 40);
+  } catch (e) {
+    // não fatal: continua sem logo
+    console.warn("Logo não foi adicionada ao PDF:", e);
+  }
+
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(10);
+  let y = 80;
+  produtos.forEach((p, idx)=>{
+    const linha = `${idx+1}. ${p.nome || p.nomeProduto || "—"} | Setor: ${p.setor || "—"} | Loja: ${p.loja || "—"} | Status: ${p.status || "—"} | Validade: ${p.validade || "—"}`;
+    doc.text(linha, 40, y);
+    y += 16;
+    if (y > doc.internal.pageSize.getHeight() - 40) { doc.addPage(); y = 40; }
+  });
+
+  doc.save(`ValiTecMJ_Relatorio_${new Date().toISOString().slice(0,10)}.pdf`);
+});
+
+document.getElementById("btnExcel")?.addEventListener("click", async () => {
+  const produtos = await carregarProdutos();
+  const dados = produtos.map(p => ({
+    Nome: p.nome || p.nomeProduto || "",
+    Codigo: p.codigo || p.codigoBarras || "",
+    Lote: p.lote || "",
+    Setor: p.setor || "",
+    Loja: p.loja || "",
+    Status: p.status || "",
+    Validade: p.validade || ""
+  }));
+  const ws = XLSX.utils.json_to_sheet(dados);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+  XLSX.writeFile(wb, `ValiTecMJ_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+});
+
+// carregamento inicial
+atualizarPainel().catch(err => console.error("erro painel:", err));
+
   // ======== CHECAR LOGIN ========
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -712,6 +919,9 @@ function diferencaDias(dataVal) {
     showSection("dashboard");
   });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
 </html>
