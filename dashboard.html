@@ -94,6 +94,24 @@
       <button id="exportPDF">📄 Exportar para PDF</button>
     </section>
 
+    <!-- 📈 ABA GRÁFICOS -->
+<section id="graficos" class="secao">
+  <h2>📈 Relatório por Setor e Loja</h2>
+  <div class="card">
+    <canvas id="graficoVencimentos" height="160"></canvas>
+  </div>
+
+  <div class="acoes-grafico">
+    <button id="btnExportarPDF">📄 Exportar PDF</button>
+    <button id="btnExportarExcel">📊 Exportar Excel</button>
+  </div>
+
+  <div id="resumoSetor" class="resumo">
+    <h3>Resumo por Setor</h3>
+    <ul id="listaResumo"></ul>
+  </div>
+</section>
+
     <section id="perfil">
       <h2>👤 Meu Perfil</h2>
       <div class="profile card">
@@ -226,6 +244,63 @@
       }
     });
   </script>
+
+ 
+<script>
+    // aba adicionada para teste de gradico //
+     // Atualiza o gráfico apenas quando a aba é aberta
+  function atualizarGrafico() {
+    const ctx = document.getElementById('graficoVencimentos');
+    if (!ctx) return; // garante que o canvas exista
+
+    // Destroi gráfico anterior se houver
+    if (window.meuGrafico) {
+      window.meuGrafico.destroy();
+    }
+
+    // Exemplo: dados do Firestore (você pode conectar depois)
+    const dados = {
+      labels: ['Mercearia', 'Bebidas', 'Frios', 'Higiene', 'Limpeza', 'Açougue'],
+      datasets: [{
+        label: 'Produtos Vencidos',
+        data: [12, 8, 5, 9, 6, 3],
+        backgroundColor: 'rgba(38, 255, 230, 0.4)',
+        borderColor: '#26ffe6',
+        borderWidth: 2,
+      }]
+    };
+
+    const config = {
+      type: 'bar',
+      data: dados,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#26ffe6' } },
+        },
+        scales: {
+          x: { ticks: { color: '#26ffe6' } },
+          y: { ticks: { color: '#26ffe6' } },
+        },
+      },
+    };
+
+    window.meuGrafico = new Chart(ctx, config);
+  }
+
+  // Integra com o menu
+  const oldShowSection = showSection;
+  showSection = function (id) {
+    oldShowSection(id);
+    if (id === 'graficos') {
+      setTimeout(atualizarGrafico, 300); // dá tempo da aba abrir
+    }
+  };
+
+</script>
+
+
+
 
   <script>
   // === MOSTRAR SEÇÕES DO DASHBOARD ===

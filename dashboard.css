@@ -241,3 +241,52 @@ canvas {
   margin-top: 20px;
   font-size: 14px;
 }
+
+
+
+#graficoVencimentos {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.acoes-grafico {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.acoes-grafico button {
+  background: #26ffe6;
+  color: #0a0f1f;
+  font-weight: bold;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.acoes-grafico button:hover {
+  background: #1ad8c4;
+}
+
+.resumo {
+  margin-top: 25px;
+  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.resumo h3 {
+  color: #26ffe6;
+  margin-bottom: 10px;
+}
+
+.resumo ul li {
+  color: #e6eef6;
+  list-style: none;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(38,255,230,0.1);
+}
