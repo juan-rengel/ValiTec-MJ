@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ValiTec MJ — Login do Gerente</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+  }
+  body {
+    background: radial-gradient(circle at 20% 20%, #0a0f1f, #050912);
+    color: #e0f7fa; overflow: hidden; height: 100vh;
+  }
+
+  /* Canvas de partículas */
+  #particles {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    background: transparent;
+  }
+
+  /* Menu Hamburguer */
+  header {
+    position: absolute; top: 0; width: 100%;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 2rem; background: rgba(10, 15, 31, 0.8);
+    backdrop-filter: blur(8px);
+  }
+  .logo {
+    font-size: 1.3rem; font-weight: 700; color: #26ffe6;
+    letter-spacing: 1px;
+  }
+  .menu-btn {
+    font-size: 1.8rem; color: #26ffe6; cursor: pointer;
+    display: none;
+  }
+  nav {
+    display: flex; gap: 1.5rem;
+  }
+  nav a {
+    color: #e0f7fa; text-decoration: none;
+    transition: 0.3s;
+  }
+  nav a:hover { color: #26ffe6; }
+
+  @media(max-width: 768px) {
+    .menu-btn { display: block; }
+    nav {
+      position: absolute; top: 60px; left: 0; width: 100%;
+      flex-direction: column; align-items: center;
+      background: rgba(0, 0, 0, 0.8);
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    nav.active { max-height: 200px; padding: 1rem 0; }
+  }
+
+  /* Formulário de Login */
+  .login-container {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px; background: rgba(20, 25, 40, 0.9);
+    padding: 2rem; border-radius: 20px;
+    box-shadow: 0 0 20px #26ffe6;
+    text-align: center;
+    animation: fadeIn 1.5s ease;
+  }
+  .login-container h2 {
+    margin-bottom: 1rem;
+    color: #26ffe6; font-size: 1.5rem;
+  }
+  .login-container input {
+    width: 100%; padding: 0.8rem;
+    margin-bottom: 1rem; border: none;
+    border-radius: 8px; outline: none;
+    background: #0a0f1f; color: #e0f7fa;
+  }
+  .login-container button {
+    width: 100%; padding: 0.8rem;
+    background: #26ffe6; border: none;
+    border-radius: 8px; color: #0a0f1f;
+    font-weight: bold; cursor: pointer;
+    transition: 0.3s;
+  }
+  .login-container button:hover {
+    background: #00bfa5; color: white;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<header>
+  <div class="logo">ValiTec MJ</div>
+  <div class="menu-btn" onclick="toggleMenu()">☰</div>
+  <nav id="menu">
+    <a href="#">Sobre</a>
+    <a href="#">Contato</a>
+    <a href="#">Ajuda</a>
+  </nav>
+</header>
+
+<div class="login-container">
+  <h2>Login do Gerente</h2>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Senha" />
+  <button onclick="login()">Entrar</button>
+  <p id="error" style="color:#ff6b6b; margin-top:10px;"></p>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
+    authDomain: "valitec-mj.firebaseapp.com",
+    projectId: "valitec-mj",
+    storageBucket: "valitec-mj.firebasestorage.app",
+    messagingSenderId: "616592039657",
+    appId: "1:616592039657:web:3827a890474111be85da78"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  window.login = async function() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const errorEl = document.getElementById('error');
+    errorEl.textContent = '';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = "dashboard.html";
+    } catch (error) {
+      errorEl.textContent = "Erro: " + error.message;
+    }
+  };
+</script>
+
+<script>
+  // Função do menu
+  function toggleMenu() {
+    document.getElementById("menu").classList.toggle("active");
+  }
+
+  // Animação de partículas
+  const canvas = document.getElementById("particles");
+  const ctx = canvas.getContext("2d");
+  let particlesArray;
+
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+
+  window.addEventListener("resize", () => {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    init();
+  });
+
+  class Particle {
+    constructor(x, y, size, color, weight) {
+      this.x = x;
+      this.y = y;
+      this.size = size;
+      this.color = color;
+      this.weight = weight;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
+    update() {
+      this.y += this.weight;
+      if (this.y > canvas.height) {
+        this.y = 0 - this.size;
+        this.x = Math.random() * canvas.width;
+      }
+      this.draw();
+    }
+  }
+
+  function init() {
+    particlesArray = [];
+    for (let i = 0; i < 80; i++) {
+      let size = Math.random() * 2 + 1;
+      let x = Math.random() * innerWidth;
+      let y = Math.random() * innerHeight;
+      let color = "#26ffe6";
+      let weight = Math.random() * 1 + 0.3;
+      particlesArray.push(new Particle(x, y, size, color, weight));
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particlesArray.length; i++) {
+      particlesArray[i].update();
+    }
+    requestAnimationFrame(animate);
+  }
+
+  init();
+  animate();
+</script>
+
+</body>
+</html>

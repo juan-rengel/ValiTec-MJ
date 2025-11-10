@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valitec MJ - Painel de Controle</title>
+<link rel="stylesheet" href="dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+#painelGerente {
+  margin-top: 2rem;
+  background: #141923;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 15px #00ffff33;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#painelGerente input, #painelGerente button {
+  width: 100%;
+  margin: .5rem 0;
+  padding: .6rem;
+  border-radius: 8px;
+  border: none;
+  background: #0a0f1f;
+  color: #e6eef6;
+}
+#painelGerente button {
+  background: #00ffff22;
+  cursor: pointer;
+  transition: 0.3s;
+}
+#painelGerente button:hover {
+  background: #00ffff55;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ValiTec MJ</div>
+  <div class="menu-btn" onclick="toggleMenu()">☰</div>
+</header>
+
+<nav id="menu">
+  <ul>
+    <li onclick="showSection('dashboard')">📊 Dashboard</li>
+    <li onclick="showSection('produtos')">🛒 Produtos</li>
+    <li onclick="showSection('graficos')">📈 Gráficos</li>
+    <li onclick="showSection('exportar')">📤 Exportar</li>
+    <li onclick="showSection('perfil')">👤 Perfil</li>
+  </ul>
+</nav>
+
+  <div class="main">
+  <section id="dashboard" class="active">
+    <h2>📊 Dashboard</h2>
+    <p>Resumo geral das lojas e produtos.</p>
+  </section>
+
+  <section id="produtos">
+    <h2>🛒 Produtos</h2>
+    <p>Cadastro e controle de produtos em rebaixa.</p>
+  </section>
+
+  <section id="graficos">
+    <h2>📈 Gráficos</h2>
+    <p>Visualização dos dados por loja.</p>
+  </section>
+
+  <section id="exportar">
+    <h2>📤 Exportar</h2>
+    <p>Exportação de relatórios e planilhas.</p>
+  </section>
+
+  <section id="perfil">
+    <h2>👤 Perfil Gerencial</h2>
+    <p>Foto, nome completo, loja e WhatsApp configurados.</p>
+  </section>
+</div>
+
+  <script>
+    // Alternar menu lateral no mobile
+    function toggleMenu() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    // Mostrar seções
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
+
+    // ======= Animação de Partículas =======
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function resizeCanvas() {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+      initParticles();
+    }
+
+    function initParticles() {
+      particlesArray = [];
+      for (let i = 0; i < 80; i++) {
+        particlesArray.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 1,
+          speedX: (Math.random() - 0.5) * 0.5,
+          speedY: (Math.random() - 0.5) * 0.5
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#00c6ff";
+      for (let p of particlesArray) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        p.x += p.speedX;
+        p.y += p.speedY;
+        if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
+
+ <!-- ========================================================= -->
+<!-- ====  PARTES 2 + 3 — FIREBASE + PRODUTOS COMPLETOS  ==== -->
+<!-- ========================================================= -->
+<script type="module">
+  // ======== CONFIG FIREBASE ========
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { 
+    getAuth, onAuthStateChanged, signOut 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { 
+    getFirestore, addDoc, collection, getDocs, Timestamp 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { 
+    getStorage, ref, uploadBytes, getDownloadURL 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+  // ======== SUA CONFIG FIREBASE ========
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
+    authDomain: "valitec-mj.firebaseapp.com",
+    projectId: "valitec-mj",
+    storageBucket: "valitec-mj.firebasestorage.app",
+    messagingSenderId: "616592039657",
+    appId: "1:616592039657:web:3827a890474111be85da78"
+  };
+
+  // ======== INICIALIZAÇÃO ========
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  // ======== CHECAR LOGIN ========
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "index.html"; // volta se não logado
+    } else {
+      console.log("Logado:", user.email);
+    }
+  });
+
+  // ======== LOGOUT ========
+  document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    signOut(auth).then(() => window.location.href = "index.html");
+  });
+
+  // =========================================================
+  // ======== CADASTRO E LISTAGEM DE PRODUTOS ========
+  // =========================================================
+  const secProdutos = document.getElementById("produtos");
+  secProdutos.innerHTML = `
+  <h2>📦 Cadastro de Produtos</h2>
+  <form id="formProduto" class="card">
+    <label>Nome do Produto:</label>
+    <input type="text" id="nomeProduto" required>
+
+    <label>Código de Barras:</label>
+    <input type="text" id="codigoBarras" placeholder="Use o leitor da câmera">
+    <button type="button" id="scanBtn">📷 Ler Código</button>
+
+    <label>Lote:</label>
+    <input type="text" id="lote" required>
+
+    <label>Setor:</label>
+    <select id="setor">
+      <option>Mercearia</option>
+      <option>Bebidas</option>
+      <option>Frios</option>
+      <option>Higiene</option>
+      <option>Limpeza</option>
+      <option>Açougue</option>
+    </select>
+
+    <label>Data de Validade:</label>
+    <input type="date" id="validade" required>
+
+    <label>Foto do Produto:</label>
+    <input type="file" id="fotoProduto" accept="image/*">
+
+    <label>Status:</label>
+    <select id="status">
+      <option value="pendente">Pendente</option>
+      <option value="rebaixado">Rebaixado</option>
+      <option value="recuperado">Recuperado</option>
+      <option value="vencido">Vencido</option>
+    </select>
+
+    <button type="submit">💾 Salvar Produto</button>
+  </form>
+
+  <hr>
+  <h3>📋 Lista de Produtos</h3>
+  <div id="listaProdutos"></div>
+  `;
+
+  const formProduto = document.getElementById("formProduto");
+  const listaProdutos = document.getElementById("listaProdutos");
+
+  // ======== SALVAR PRODUTO ========
+  formProduto.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = document.getElementById("fotoProduto").files[0];
+    let fotoURL = "";
+
+    try {
+      if (file) {
+        const storageRef = ref(storage, "produtos/" + Date.now() + "-" + file.name);
+        await uploadBytes(storageRef, file);
+        fotoURL = await getDownloadURL(storageRef);
+      }
+
+      const dados = {
+        nome: nomeProduto.value,
+        codigo: codigoBarras.value || "",
+        lote: lote.value,
+        setor: setor.value,
+        validade: validade.value,
+        status: status.value,
+        foto: fotoURL,
+        criadoPor: auth.currentUser?.email || "admin",
+        criadoEm: Timestamp.now()
+      };
+
+      await addDoc(collection(db, "produtos"), dados);
+      alert("✅ Produto cadastrado com sucesso!");
+      formProduto.reset();
+      listarProdutos();
+    } catch (err) {
+      alert("Erro ao salvar produto: " + err.message);
+    }
+  });
+
+  // ======== LISTAR PRODUTOS ========
+  async function listarProdutos() {
+    const snap = await getDocs(collection(db, "produtos"));
+    listaProdutos.innerHTML = "";
+    const hoje = new Date();
+
+    snap.forEach((docu) => {
+      const p = docu.data();
+      const validade = new Date(p.validade);
+      const diffDias = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
+      let cor = "";
+      if (diffDias <= 10 && diffDias >= 7) cor = "yellow";
+      else if (diffDias <= 6 && diffDias >= 4) cor = "orange";
+      else if (diffDias <= 3) cor = "red";
+
+      const card = document.createElement("div");
+      card.style = `
+        border: 1px solid ${cor};
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: rgba(255,255,255,0.03);
+      `;
+      card.innerHTML = `
+        <b>${p.nome}</b> (${p.setor})<br>
+        <small>Lote: ${p.lote}</small><br>
+        <small>Validade: ${p.validade} (${diffDias} dias)</small><br>
+        <small>Status: ${p.status}</small><br>
+        ${p.foto ? `<img src="${p.foto}" width="100">` : ""}
+        <br>
+        <button onclick="enviarWhats('${p.nome}','${p.lote}','${p.setor}','${p.validade}','${p.status}')">📩 WhatsApp</button>
+      `;
+      listaProdutos.appendChild(card);
+
+      // WhatsApp automático quando faltam 5 dias
+      if (diffDias === 5) {
+        enviarWhats(p.nome, p.lote, p.setor, p.validade, p.status);
+      }
+    });
+  }
+
+  // ======== ENVIO WHATSAPP ========
+  window.enviarWhats = function(nome, lote, setor, validade, status) {
+    const msg = `🚨 *Produto Próximo ao Vencimento!*\n\n📦 *${nome}*\n🔢 Lote: ${lote}\n🏬 Setor: ${setor}\n📅 Validade: ${validade}\n⚙️ Status: ${status}\n\nPor favor, verifique e realize a rebaixa.`;
+    const link = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(link, "_blank");
+  }
+
+  listarProdutos();
+
+  // ======== LEITOR DE CÓDIGO DE BARRAS ========
+  const scanBtn = document.getElementById("scanBtn");
+  scanBtn.addEventListener("click", async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      video.play();
+      document.body.appendChild(video);
+      alert("📷 Leitor de código simulado. (versão real pode usar biblioteca 'QuaggaJS')");
+    } catch (err) {
+      alert("Erro ao acessar câmera: " + err.message);
+    }
+  });
+</script>
+
+<!-- === PARTE 4 — GRÁFICOS E EXPORTAÇÕES (CORRIGIDA) === -->
+<!-- libs externas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  // usa o mesmo 'db' criado na Parte 2
+  const secGraficos = document.getElementById("graficos");
+
+  if (secGraficos) {
+    secGraficos.innerHTML = `
+      <h2>📊 Análise de Vencimentos</h2>
+      <div class="controls" style="margin-bottom:1rem">
+        <button id="btnExcel">📑 Exportar Excel</button>
+        <button id="btnPDF">📄 Exportar PDF</button>
+      </div>
+      <canvas id="grafSetor" style="max-height:300px"></canvas>
+      <canvas id="grafStatus" style="max-height:300px;margin-top:30px"></canvas>
+    `;
+  }
+
+  async function gerarGraficos() {
+    const snap = await db.collection("produtos").get();
+    const dados = snap.docs.map(d => d.data());
+
+    const setores = {};
+    const statusContagem = {};
+
+    dados.forEach(p => {
+      setores[p.setor] = (setores[p.setor] || 0) + 1;
+      statusContagem[p.status || "sem status"] =
+        (statusContagem[p.status || "sem status"] || 0) + 1;
+    });
+
+    // gráfico por setor
+    const ctx1 = document.getElementById("grafSetor");
+    new Chart(ctx1, {
+      type: "bar",
+      data: {
+        labels: Object.keys(setores),
+        datasets: [{
+          label: "Produtos por Setor",
+          data: Object.values(setores),
+          backgroundColor: "rgba(0,255,255,0.4)",
+          borderColor: "#00ffff",
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: "#0ff" } } },
+        scales: {
+          x: { ticks: { color: "#fff" } },
+          y: { ticks: { color: "#fff" } }
+        }
+      }
+    });
+
+    // gráfico por status
+    const ctx2 = document.getElementById("grafStatus");
+    new Chart(ctx2, {
+      type: "pie",
+      data: {
+        labels: Object.keys(statusContagem),
+        datasets: [{
+          data: Object.values(statusContagem),
+          backgroundColor: ["#00ffff", "#ffa500", "#00ff7f", "#ff4444"]
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: "#fff" } } }
+      }
+    });
+  }
+
+  gerarGraficos();
+
+  // ======== EXPORTAR EXCEL ========
+  document.getElementById("btnExcel").addEventListener("click", async () => {
+    const snap = await db.collection("produtos").get();
+    const dados = snap.docs.map(d => d.data());
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+    XLSX.writeFile(wb, "valitec_produtos.xlsx");
+  });
+
+  // ======== EXPORTAR PDF ========
+  document.getElementById("btnPDF").addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    const snap = await db.collection("produtos").get();
+    const dados = snap.docs.map(d => d.data());
+
+    pdf.setFontSize(14);
+    pdf.text("Relatório de Produtos - Valitec MJ", 14, 20);
+    pdf.setFontSize(10);
+
+    let y = 30;
+    dados.forEach((p, i) => {
+      pdf.text(
+        `${i + 1}. ${p.nome} | Setor: ${p.setor} | Validade: ${p.validade} | Status: ${p.status}`,
+        14,
+        y
+      );
+      y += 8;
+      if (y > 270) { pdf.addPage(); y = 20; }
+    });
+
+    pdf.save("valitec_produtos.pdf");
+  });
+
+
+</script>
+
+
+<!-- === PARTE 5 — PAINEL ADMINISTRATIVO (GERAL E POR LOJA) === -->
+<script>
+  const painelAdmin = document.createElement("section");
+  painelAdmin.classList.add("card");
+  painelAdmin.innerHTML = `
+    <h2>🏪 Painel Administrativo - Supermercados</h2>
+    <div class="filtros" style="margin-bottom:1rem;">
+      <label>Supermercado:</label>
+      <select id="filtroLoja">
+        <option value="">Todos</option>
+      </select>
+      <label>Setor:</label>
+      <select id="filtroSetor">
+        <option value="">Todos</option>
+      </select>
+      <label>Status:</label>
+      <select id="filtroStatus">
+        <option value="">Todos</option>
+        <option value="pendente">Pendente</option>
+        <option value="rebaixado">Rebaixado</option>
+        <option value="vencido">Vencido</option>
+        <option value="recuperado">Recuperado</option>
+      </select>
+      <button id="btnFiltrar">🔍 Filtrar</button>
+    </div>
+    <div id="tabelaAdmin" style="overflow:auto;max-height:400px"></div>
+    <canvas id="grafAdmin" style="margin-top:2rem;max-height:350px;"></canvas>
+  `;
+  document.body.appendChild(painelAdmin);
+
+  // carregar listas para filtros
+  async function carregarFiltros() {
+    const snap = await db.collection("produtos").get();
+    const produtos = snap.docs.map(d => d.data());
+
+    const lojas = [...new Set(produtos.map(p => p.loja || "Sem Loja"))];
+    const setores = [...new Set(produtos.map(p => p.setor || "Sem Setor"))];
+
+    const filtroLoja = document.getElementById("filtroLoja");
+    lojas.forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = l;
+      opt.textContent = l;
+      filtroLoja.appendChild(opt);
+    });
+
+    const filtroSetor = document.getElementById("filtroSetor");
+    setores.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      filtroSetor.appendChild(opt);
+    });
+  }
+
+  carregarFiltros();
+
+  async function gerarTabelaEGráfico() {
+    const filtroLoja = document.getElementById("filtroLoja").value;
+    const filtroSetor = document.getElementById("filtroSetor").value;
+    const filtroStatus = document.getElementById("filtroStatus").value;
+
+    const snap = await db.collection("produtos").get();
+    const produtos = snap.docs.map(d => d.data());
+    let filtrados = produtos;
+
+    if (filtroLoja) filtrados = filtrados.filter(p => p.loja === filtroLoja);
+    if (filtroSetor) filtrados = filtrados.filter(p => p.setor === filtroSetor);
+    if (filtroStatus) filtrados = filtrados.filter(p => p.status === filtroStatus);
+
+    // tabela HTML
+    let html = `
+      <table border="1" cellpadding="6" cellspacing="0" style="width:100%;text-align:left;color:#eee;border-color:#333;">
+        <tr style="background:#00ffff33;color:#0ff;">
+          <th>Produto</th><th>Lote</th><th>Setor</th><th>Validade</th>
+          <th>Status</th><th>Loja</th><th>WhatsApp Gerente</th><th>Responsável</th>
+        </tr>
+    `;
+    filtrados.forEach(p => {
+      html += `
+        <tr>
+          <td>${p.nome || ""}</td>
+          <td>${p.lote || ""}</td>
+          <td>${p.setor || ""}</td>
+          <td>${p.validade || ""}</td>
+          <td>${p.status || ""}</td>
+          <td>${p.loja || ""}</td>
+          <td>${p.whatsGerente || ""}</td>
+          <td>${p.whatsResponsavel || ""}</td>
+        </tr>
+      `;
+    });
+    html += "</table>";
+
+    document.getElementById("tabelaAdmin").innerHTML = html;
+
+    // gráfico de resumo por loja
+    const resumo = {};
+    filtrados.forEach(p => {
+      resumo[p.loja || "Sem Loja"] = (resumo[p.loja || "Sem Loja"] || 0) + 1;
+    });
+
+    const ctx = document.getElementById("grafAdmin");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: Object.keys(resumo),
+        datasets: [{
+          label: "Produtos Cadastrados por Loja",
+          data: Object.values(resumo),
+          backgroundColor: "rgba(0,255,255,0.4)",
+          borderColor: "#00ffff",
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: "#0ff" } } },
+        scales: {
+          x: { ticks: { color: "#fff" } },
+          y: { ticks: { color: "#fff" } }
+        }
+      }
+    });
+  }
+
+  document.getElementById("btnFiltrar").addEventListener("click", gerarTabelaEGráfico);
+  gerarTabelaEGráfico();
+</script>
+
+
+<!-- === PARTE 6 — PAINEL DO GERENTE + LEITOR + WHATSAPP === -->
+<script>
+// === Inicialização do leitor de código de barras ===
+const video = document.createElement("video");
+video.style.display = "none";
+document.body.appendChild(video);
+
+async function iniciarCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = stream;
+    await video.play();
+  } catch (e) {
+    alert("Erro ao acessar a câmera: " + e.message);
+  }
+}
+
+// Exemplo simples de leitor (pode ser substituído por QuaggaJS para leitura real)
+async function lerCodigoBarras() {
+  alert("Abra a câmera e aponte para o código de barras (demo)");
+  iniciarCamera();
+  // Aqui pode-se integrar QuaggaJS para leitura real
+  const codigo = prompt("Digite o código de barras lido:");
+  document.getElementById("codigoProduto").value = codigo;
+}
+
+// === Formulário de cadastro do produto ===
+const painelGerente = document.createElement("section");
+painelGerente.id = "painelGerente";
+painelGerente.innerHTML = `
+  <h2>🧾 Cadastro de Produto</h2>
+  <form id="formProduto">
+    <input id="codigoProduto" placeholder="Código de Barras" required>
+    <button type="button" onclick="lerCodigoBarras()">📷 Ler Código</button><br>
+    <input id="nomeProduto" placeholder="Nome do Produto" required><br>
+    <input id="setorProduto" placeholder="Setor" required><br>
+    <input id="loteProduto" placeholder="Lote" required><br>
+    <input id="validadeProduto" type="date" required><br>
+    <input id="fotoProduto" type="file" accept="image/*"><br>
+    <input id="lojaProduto" placeholder="Loja" required><br>
+    <button type="submit">Salvar Produto</button>
+  </form>
+`;
+document.body.appendChild(painelGerente);
+
+// === Upload da foto e cadastro no Firestore ===
+const form = document.getElementById("formProduto");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nome = nomeProduto.value.trim();
+  const setor = setorProduto.value.trim();
+  const lote = loteProduto.value.trim();
+  const validade = validadeProduto.value;
+  const codigo = codigoProduto.value;
+  const loja = lojaProduto.value;
+  const arquivo = fotoProduto.files[0];
+  let fotoURL = "";
+
+  if (arquivo) {
+    const ref = storage.ref("fotos/" + arquivo.name);
+    await ref.put(arquivo);
+    fotoURL = await ref.getDownloadURL();
+  }
+
+  const diasRestantes = diferencaDias(validade);
+  const status = diasRestantes <= 0 ? "vencido" : "ativo";
+
+  await db.collection("produtos").add({
+    nome, setor, lote, validade, codigo, loja,
+    foto: fotoURL, status, criadoEm: new Date().toISOString()
+  });
+
+  alert("Produto cadastrado com sucesso!");
+  form.reset();
+
+  if (diasRestantes === 5) {
+    enviarWhatsAppResponsavel({ nome, setor, validade, loja, lote });
+  }
+});
+
+// === Função para enviar mensagem no WhatsApp ===
+function enviarWhatsAppResponsavel(produto) {
+  const mensagem = `🚨 *ALERTA DE PRODUTO A VENCER (5 dias)* 🚨
+Produto: ${produto.nome}
+Setor: ${produto.setor}
+Lote: ${produto.lote}
+Validade: ${produto.validade}
+Loja: ${produto.loja}
+
+Por favor, realizar a rebaixa de preço.`;
+
+  // WhatsApp do responsável cadastrado (pode vir do perfil do gerente)
+  const numeroResponsavel = prompt("Informe o WhatsApp do responsável pela rebaixa:");
+  if (!numeroResponsavel) return alert("Número não informado!");
+
+  const url = `https://wa.me/${numeroResponsavel.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, "_blank");
+}
+
+function diferencaDias(dataVal) {
+  const hoje = new Date();
+  const validade = new Date(dataVal);
+  return Math.floor((validade - hoje) / (1000 * 60 * 60 * 24));
+}
+</script>
+
+<script src="particles.js"></script>
+<canvas id="particles"></canvas>
+
+<script>
+  // === MENU HAMBÚRGUER E NAVEGAÇÃO ===
+  function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.classList.toggle("active");
+  }
+
+  function showSection(sectionId) {
+    // Esconde todas as seções
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    // Mostra apenas a seção clicada
+    const target = document.getElementById(sectionId);
+    if (target) target.classList.add("active");
+    // Fecha o menu no mobile
+    document.getElementById("menu").classList.remove("active");
+  }
+
+  // Exibe o Dashboard por padrão
+  document.addEventListener("DOMContentLoaded", () => {
+    showSection("dashboard");
+  });
+</script>
+
+</body>
+</html>
+
+</script>
+</body>
+</html>
