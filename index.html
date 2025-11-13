@@ -1,222 +1,192 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ValiTec MJ — Login do Gerente</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
-  * {
-    margin: 0; padding: 0; box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-  }
-  body {
-    background: radial-gradient(circle at 20% 20%, #0a0f1f, #050912);
-    color: #e0f7fa; overflow: hidden; height: 100vh;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ValiTec MJ — Login</title>
 
-  /* Canvas de partículas */
-  #particles {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: -1;
-    background: transparent;
-  }
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
-  /* Menu Hamburguer */
-  header {
-    position: absolute; top: 0; width: 100%;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 1rem 2rem; background: rgba(10, 15, 31, 0.8);
-    backdrop-filter: blur(8px);
-  }
-  .logo {
-    font-size: 1.3rem; font-weight: 700; color: #26ffe6;
-    letter-spacing: 1px;
-  }
-  .menu-btn {
-    font-size: 1.8rem; color: #26ffe6; cursor: pointer;
-    display: none;
-  }
-  nav {
-    display: flex; gap: 1.5rem;
-  }
-  nav a {
-    color: #e0f7fa; text-decoration: none;
-    transition: 0.3s;
-  }
-  nav a:hover { color: #26ffe6; }
-
-  @media(max-width: 768px) {
-    .menu-btn { display: block; }
-    nav {
-      position: absolute; top: 60px; left: 0; width: 100%;
-      flex-direction: column; align-items: center;
-      background: rgba(0, 0, 0, 0.8);
-      max-height: 0; overflow: hidden;
-      transition: max-height 0.4s ease;
+  <style>
+    :root{
+      --accent:#00c8ff;
+      --text:#dff6ff;
     }
-    nav.active { max-height: 200px; padding: 1rem 0; }
-  }
 
-  /* Formulário de Login */
-  .login-container {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 320px; background: rgba(20, 25, 40, 0.9);
-    padding: 2rem; border-radius: 20px;
-    box-shadow: 0 0 20px #26ffe6;
-    text-align: center;
-    animation: fadeIn 1.5s ease;
-  }
-  .login-container h2 {
-    margin-bottom: 1rem;
-    color: #26ffe6; font-size: 1.5rem;
-  }
-  .login-container input {
-    width: 100%; padding: 0.8rem;
-    margin-bottom: 1rem; border: none;
-    border-radius: 8px; outline: none;
-    background: #0a0f1f; color: #e0f7fa;
-  }
-  .login-container button {
-    width: 100%; padding: 0.8rem;
-    background: #26ffe6; border: none;
-    border-radius: 8px; color: #0a0f1f;
-    font-weight: bold; cursor: pointer;
-    transition: 0.3s;
-  }
-  .login-container button:hover {
-    background: #00bfa5; color: white;
-  }
+    body {
+      background: radial-gradient(circle at 20% 20%, #0a0f1f, #050912);
+      color: var(--text);
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -60%); }
-    to { opacity: 1; transform: translate(-50%, -50%); }
-  }
-</style>
+    #particleCanvas { position: fixed; inset: 0; z-index: 0; }
+
+    .login-container {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 330px;
+      padding: 2.2rem;
+      background: rgba(12,20,35,0.82);
+      border-radius: 16px;
+      border: 1px solid rgba(0,200,255,0.45);
+      box-shadow: 0 0 25px rgba(0,200,255,0.25);
+      backdrop-filter: blur(10px);
+      animation: fadeIn .35s ease-out;
+      z-index: 5;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to   { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 18px;
+      color: var(--accent);
+      text-shadow: 0 0 14px rgba(0,200,255,0.45);
+      font-weight: 600;
+    }
+
+    label { font-size: 13px; margin-top: 8px; display: block; color:#9fdfff; }
+
+    input {
+      width: 100%; padding: 11px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color:white; margin-top: 4px;
+      outline:none; transition:.25s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(0,200,255,0.45);
+    }
+
+    button {
+      margin-top: 16px;
+      width: 100%; padding: 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      background: linear-gradient(90deg,#00b4d8,#009bff);
+      color: #00131e;
+      box-shadow: 0 0 14px rgba(0,200,255,0.45);
+      transition:.25s;
+    }
+
+    button:hover { transform: scale(1.05); filter:brightness(1.15); }
+
+    .error { color:#ff6f6f; margin-top:10px; text-align:center; min-height:18px; }
+  </style>
 </head>
+
 <body>
 
-<canvas id="particles"></canvas>
-
-<header>
-  <div class="logo">ValiTec MJ</div>
-  <div class="menu-btn" onclick="toggleMenu()">☰</div>
-  <nav id="menu">
-    <a href="#">Sobre</a>
-    <a href="#">Condwadaddawtato</a>
-    <a href="#">Ajuda</a>
-  </nav>
-</header>
+<canvas id="particleCanvas"></canvas>
 
 <div class="login-container">
-  <h2>Login do Gerente</h2>
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Senha" />
-  <button onclick="login()">Entrar</button>
-  <p id="error" style="color:#ff6b6b; margin-top:10px;"></p>
+  <h2>ValiTec MJ</h2>
+
+  <form id="loginForm">
+    <label>E-mail</label>
+    <input type="email" id="email" required>
+
+    <label>Senha</label>
+    <input type="password" id="password" required>
+
+    <button type="submit">Entrar</button>
+    <p id="error" class="error"></p>
+    <a href="redefinir-senha.html" style="display:block;margin-top:8px;text-align:center;color:#4eff9a;font-size:13px;">
+  Esqueci minha senha
+</a>
+
+  </form>
 </div>
 
-<!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
-  apiKey: "AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
-  authDomain: "valitec-mj.firebaseapp.com",
-  projectId: "valitec-mj",
-  storageBucket: "valitec-mj.appspot.com", // ✅ corrigido
-  messagingSenderId: "616592039657",
-  appId: "1:616592039657:web:3827a890474111be85da78"
-};
+    apiKey: "AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
+    authDomain: "valitec-mj.firebaseapp.com",
+    projectId: "valitec-mj",
+    storageBucket: "valitec-mj.firebasestorage.app",
+    messagingSenderId: "616592039657",
+    appId: "1:616592039657:web:3827a890474111be85da78"
+  };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  window.login = async function() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const errorEl = document.getElementById('error');
-    errorEl.textContent = '';
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      window.location.href = "dashboard.html";
-    } catch (error) {
-      errorEl.textContent = "Erro: " + error.message;
-    }
+  // ✅ Mapeamento de e-mails para lojas
+  const lojaPorGerente = {
+    "cd@supernovacidade.com": "loja_cd_cidade",
+    "novacidade@supernovacidade.com": "loja_cidade",
+    "terranova@supernovacidade.com": "loja_terranova",
+    "manoa@supernovacidade.com": "loja_manoa",
+    "zumbi@supernovacidade.com": "loja_zumbi",
+    "oswaldofrota@supernovacidade.com": "loja_oswaldo",
+    "mosaico@supernovacidade.com": "loja_mosaico",
+    "master@supernovacidade.com": "master"
   };
+
+document.getElementById("loginForm").addEventListener("submit", async (e)=> {
+  e.preventDefault();
+
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const senha = document.getElementById("password").value.trim();
+  const errorEl = document.getElementById("error");
+
+  try {
+    const userCred = await signInWithEmailAndPassword(auth, email, senha);
+
+    const ref = doc(db, "usuarios", email);
+    const snap = await getDoc(ref);
+
+    let loja, cargo;
+
+    if (snap.exists()) {
+
+      loja = snap.data().loja;
+      cargo = snap.data().gerentes;  // ✅ CORRIGIDO
+
+    } else {
+      loja = prompt("Digite o código da loja (ex: loja_manoa):");
+      cargo = "gerente"; // padrão
+
+      await setDoc(ref, { email, loja, gerentes: cargo }, { merge:true });
+    }
+
+    localStorage.setItem("usuarioLogado", email);
+    window.location.href = "dashboard.html";
+
+  } catch (e) {
+    errorEl.textContent = "Email ou senha incorretos.";
+  }
+});
+
 </script>
+
 
 <script>
-  // Função do menu
-  function toggleMenu() {
-    document.getElementById("menu").classList.toggle("active");
-  }
-
-  // Animação de partículas
-  const canvas = document.getElementById("particles");
-  const ctx = canvas.getContext("2d");
-  let particlesArray;
-
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-
-  window.addEventListener("resize", () => {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    init();
-  });
-
-  class Particle {
-    constructor(x, y, size, color, weight) {
-      this.x = x;
-      this.y = y;
-      this.size = size;
-      this.color = color;
-      this.weight = weight;
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
-      ctx.fillStyle = this.color;
-      ctx.fill();
-    }
-    update() {
-      this.y += this.weight;
-      if (this.y > canvas.height) {
-        this.y = 0 - this.size;
-        this.x = Math.random() * canvas.width;
-      }
-      this.draw();
-    }
-  }
-
-  function init() {
-    particlesArray = [];
-    for (let i = 0; i < 80; i++) {
-      let size = Math.random() * 2 + 1;
-      let x = Math.random() * innerWidth;
-      let y = Math.random() * innerHeight;
-      let color = "#26ffe6";
-      let weight = Math.random() * 1 + 0.3;
-      particlesArray.push(new Particle(x, y, size, color, weight));
-    }
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < particlesArray.length; i++) {
-      particlesArray[i].update();
-    }
-    requestAnimationFrame(animate);
-  }
-
-  init();
-  animate();
+// Partículas
+const canvas=document.getElementById("particleCanvas"),ctx=canvas.getContext("2d");
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();onresize=resize;
+let particles=[...Array(65)].map(()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*2+1,dx:(Math.random()-.5)*.45,dy:(Math.random()-.5)*.45}));
+function draw(){ctx.clearRect(0,0,innerWidth,innerHeight);ctx.fillStyle="rgba(0,200,255,.35)";
+particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>innerWidth)p.dx*=-1;if(p.y<0||p.y>innerHeight)p.dy*=-1;});
+requestAnimationFrame(draw);}draw();
 </script>
 
+</script>
 </body>
 </html>

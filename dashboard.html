@@ -1,335 +1,213 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Valitec MJ - Dashboard</title>
+  <title>ValiTec MJ — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dashboard.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
-  <div id="particles"></div>
+  <canvas id="particleCanvas"></canvas>
 
-  <header>
-    <div class="logo">⚙️ Valitec MJ</div>
-    <div class="menu-btn" id="menuBtn">☰</div>
-  </header>
+  <div class="app-container">
+    <aside class="sidebar">
+      <nav>
+        <a href="#" class="active">Painel</a>
+        <a href="produto.html">Cadastrar Produtos</a>
+        <a href="Lista-produtos.html">Lista de Produtos</a>
+        <a href="Lista-rebaixados.html">Produtos Rebaixados</a>
+        <a href="calendario.html">Calendário</a>
+        <a href="perfil.html">Perfil</a>
+        <a href="cadastro-usuarios.html">Cadastrar Usuários</a>
+        <a href="relatorios.html">Relatórios</a>
+        <a href="#" onclick="localStorage.clear(); location.href='index.html'">Sair</a>
+      </nav>
+    </aside>
 
-  <nav id="menu">
-    <ul>
-      <li onclick="showSection('dashboard')">📊 Dashboard</li>
-      <li onclick="showSection('produtos')">🛒 Produtos</li>
-      <li onclick="showSection('graficos')">📈 Gráficos</li>
-      <li onclick="showSection('exportar')">📤 Exportar</li>
-      <li onclick="showSection('perfil')">👤 Perfil</li>
-    </ul>
-  </nav>
+    <main class="main">
+      <h2 style="text-align:center; margin-bottom: 15px;">Painel de Indicadores</h2>
 
-  <main class="main">
-    <section id="dashboard" class="active">
-      <h2>📊 Resumo Geral</h2>
-      <div class="card">
-        <p>Bem-vindo ao painel da <strong>Valitec MJ</strong>. Acompanhe produtos, setores e status em tempo real.</p>
+      <!-- Cards -->
+      <div class="cards">
+        <div class="card"><span class="icon">⏳</span><span class="number" id="pertoVencer">0</span><span class="label">Perto de Vencer</span></div>
+        <div class="card"><span class="icon">📅</span><span class="number" id="vencendoHoje">0</span><span class="label">Vencendo Hoje</span></div>
+        <div class="card"><span class="icon">⚠️</span><span class="number" id="vencidos">0</span><span class="label">Vencidos</span></div>
+        <div class="card"><span class="icon">📦</span><span class="number" id="totalProdutos">0</span><span class="label">Total de Produtos</span></div>
+        <div class="card resumo-card" id="abrirSetor"><span class="icon">🏷️</span><span class="number">+</span><span class="label">Resumo por Setor</span></div>
       </div>
-    </section>
-
-    <section id="produtos">
-      <h2>📦 Cadastro de Produtos</h2>
-      <form id="formProduto" class="card">
-        <label>Nome do Produto:</label>
-        <input type="text" id="nomeProduto" required>
-
-        <label>Código de Barras:</label>
-        <input type="text" id="codigoBarras">
-        <button type="button" id="scanBtn">📷 Ler Código</button>
-
-        <label>Lote:</label>
-        <input type="text" id="lote" required>
-
-        <label>Setor:</label>
-        <select id="setor">
-          <option>Mercearia</option>
-          <option>Bebidas</option>
-          <option>Frios</option>
-          <option>Higiene</option>
-          <option>Limpeza</option>
-          <option>Açougue</option>
-        </select>
-
-        <label>Data de Validade:</label>
-        <input type="date" id="validade" required>
-
-        <label>Foto do Produto:</label>
-        <input type="file" id="fotoProduto" accept="image/*">
-
-        <label>Status:</label>
-        <select id="status">
-          <option value="pendente">Pendente</option>
-          <option value="rebaixado">Rebaixado</option>
-          <option value="recuperado">Recuperado</option>
-          <option value="vencido">Vencido</option>
-        </select>
-
-        <button type="submit">💾 Salvar Produto</button>
-      </form>
-
-      <hr>
-      <h3>📋 Lista de Produtos</h3>
-      <div id="listaProdutos"></div>
-    </section>
-
-    <section id="graficos">
-      <h2>📈 Gráficos</h2>
-      <div class="chart-container card">
-        <canvas id="graficoStatus"></canvas>
-      </div>
-    </section>
-
-    <section id="exportar">
-      <h2>📤 Exportar Relatórios</h2>
-      <button id="exportExcel">📊 Exportar para Excel</button>
-      <button id="exportPDF">📄 Exportar para PDF</button>
-    </section>
-
-    <!-- 📈 ABA GRÁFICOS -->
-<section id="graficos" class="secao">
-  <h2>📈 Relatório por Setor e Loja</h2>
-  <div class="card">
-    <canvas id="graficoVencimentos" height="160"></canvas>
+    </main>
   </div>
 
-  <div class="acoes-grafico">
-    <button id="btnExportarPDF">📄 Exportar PDF</button>
-    <button id="btnExportarExcel">📊 Exportar Excel</button>
+  <!-- Modal Resumo por Setor -->
+  <div id="modalSetor" class="modal" style="display:none;">
+    <div style="background:rgba(15,25,45,0.96); border:1px solid var(--accent);
+                padding:20px; border-radius:12px; width:360px; max-width:90vw;">
+      <h3 style="text-align:center;margin-bottom:12px;">Resumo por Setor</h3>
+      <canvas id="graficoSetoresModal" style="max-width:100%;"></canvas>
+      <button id="fecharSetor" style="margin-top:15px;width:100%;padding:10px;
+              border:none;border-radius:10px;background:var(--accent);
+              color:#000;font-weight:700;cursor:pointer;">Fechar</button>
+    </div>
   </div>
 
-  <div id="resumoSetor" class="resumo">
-    <h3>Resumo por Setor</h3>
-    <ul id="listaResumo"></ul>
-  </div>
-</section>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <section id="perfil">
-      <h2>👤 Meu Perfil</h2>
-      <div class="profile card">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg" alt="Perfil">
-        <p>Logado como: <span id="userEmail">Carregando...</span></p>
-        <button id="logoutBtn">🚪 Sair</button>
-      </div>
-    </section>
-  </main>
-
-  <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
-      authDomain: "valitec-mj.firebaseapp.com",
-      projectId: "valitec-mj",
-      storageBucket: "valitec-mj.firebasestorage.app",
-      messagingSenderId: "616592039657",
-      appId: "1:616592039657:web:3827a890474111be85da78"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
+    authDomain: "valitec-mj.firebaseapp.com",
+    projectId: "valitec-mj",
+    storageBucket: "valitec-mj.firebasestorage.app",
+    messagingSenderId: "616592039657",
+    appId: "1:616592039657:web:3827a890474111be85da78"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-    const menuBtn = document.getElementById("menuBtn");
-    const menu = document.getElementById("menu");
-    const userEmail = document.getElementById("userEmail");
+  let lojaAtual = null;
+  let graficoSetor = null;
 
-    // === MENU RESPONSIVO ===
-    menuBtn.addEventListener("click", () => {
-      menu.classList.toggle("active");
+  // === Carregar loja do usuário logado ===
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    const snap = await getDoc(doc(db, "usuarios", user.email));
+    if (!snap.exists()) return;
+    lojaAtual = snap.data().loja;
+
+    carregarIndicadores();
+  });
+
+  // === Indicadores principais ===
+  async function carregarIndicadores() {
+    if (!lojaAtual) return;
+    const ref = collection(db, `lojas/${lojaAtual}/produtos`);
+    const snap = await getDocs(ref);
+
+    let total = 0, vencidos = 0, vencendoHoje = 0, pertoVencer = 0;
+    const hoje = new Date();
+    snap.forEach(docItem => {
+      const p = docItem.data();
+      if (!p.dataValidadeISO) return;
+      total++;
+      const validade = new Date(p.dataValidadeISO);
+      const diff = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
+
+      if (diff < 0) vencidos++;
+      else if (diff === 0) vencendoHoje++;
+      else if (diff <= 5) pertoVencer++;
     });
 
-    function showSection(id) {
-      document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-      if (window.innerWidth < 768) menu.classList.remove("active");
-    }
+    document.getElementById("totalProdutos").textContent = total;
+    document.getElementById("vencidos").textContent = vencidos;
+    document.getElementById("vencendoHoje").textContent = vencendoHoje;
+    document.getElementById("pertoVencer").textContent = pertoVencer;
+  }
 
-    // === LOGIN STATUS ===
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        userEmail.textContent = user.email;
-      } else {
-        window.location.href = "login.html";
-      }
+  // === Gráfico Resumo por Setor ===
+  async function abrirResumoSetor() {
+    if (!lojaAtual) return alert("Loja não identificada.");
+    const modal = document.getElementById("modalSetor");
+    modal.style.display = "flex";
+
+    const ref = collection(db, `lojas/${lojaAtual}/produtos`);
+    const snap = await getDocs(ref);
+
+    const setores = {};
+    snap.forEach(docItem => {
+      const p = docItem.data();
+      if (!p.setor) return;
+      setores[p.setor] = (setores[p.setor] || 0) + 1;
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+    const ctx = document.getElementById("graficoSetoresModal").getContext("2d");
+    if (graficoSetor) graficoSetor.destroy();
 
-    // === SALVAR PRODUTO ===
-    document.getElementById("formProduto").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const nomeProduto = document.getElementById("nomeProduto");
-      const codigoBarras = document.getElementById("codigoBarras");
-      const lote = document.getElementById("lote");
-      const setor = document.getElementById("setor");
-      const validade = document.getElementById("validade");
-      const status = document.getElementById("status");
-      const fotoProduto = document.getElementById("fotoProduto").files[0];
-      let fotoURL = "";
-
-      if (fotoProduto) {
-        const storageRef = ref(storage, `produtos/${fotoProduto.name}`);
-        await uploadBytes(storageRef, fotoProduto);
-        fotoURL = await getDownloadURL(storageRef);
-      }
-
-      const dados = {
-        nome: nomeProduto.value,
-        codigo: codigoBarras.value || "",
-        lote: lote.value,
-        setor: setor.value,
-        validade: validade.value,
-        status: status.value,
-        foto: fotoURL,
-        criadoPor: auth.currentUser?.email || "admin",
-        criadoEm: Timestamp.now()
-      };
-
-      await addDoc(collection(db, "produtos"), dados);
-      alert("✅ Produto salvo com sucesso!");
-      e.target.reset();
-    });
-
-    // === EXPORTAÇÕES ===
-    document.getElementById("exportPDF").addEventListener("click", () => {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
-      pdf.setFillColor(10, 15, 31);
-      pdf.rect(0, 0, 210, 297, "F");
-      pdf.setTextColor(38, 255, 230);
-      pdf.setFontSize(16);
-      pdf.text("📄 Relatório Valitec MJ", 20, 20);
-      pdf.addImage("https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png", "PNG", 160, 10, 30, 30);
-      pdf.save("ValitecMJ_Relatorio.pdf");
-    });
-
-    document.getElementById("exportExcel").addEventListener("click", async () => {
-      const querySnapshot = await getDocs(collection(db, "produtos"));
-      const produtos = querySnapshot.docs.map(doc => doc.data());
-      const ws = XLSX.utils.json_to_sheet(produtos);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Produtos");
-      XLSX.writeFile(wb, "ValitecMJ_Produtos.xlsx");
-    });
-
-    // === GRÁFICO ===
-    const ctx = document.getElementById("graficoStatus");
-    new Chart(ctx, {
-      type: "bar",
+    graficoSetor = new Chart(ctx, {
+      type: 'doughnut',
       data: {
-        labels: ["Pendente", "Rebaixado", "Recuperado", "Vencido"],
+        labels: Object.keys(setores),
         datasets: [{
-          label: "Quantidade",
-          data: [12, 5, 8, 3],
-          backgroundColor: "#26ffe6"
+          data: Object.values(setores),
+          backgroundColor: ["#00C8FF","#4EFF9A","#FFD700","#FF6B6B","#9B5DE5","#F15BB5","#00BBF9"]
         }]
       },
       options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        plugins: { legend: { labels: { color: '#fff' } } }
       }
     });
-  </script>
-
- 
-<script>
-    // aba adicionada para teste de gradico //
-     // Atualiza o gráfico apenas quando a aba é aberta
-  function atualizarGrafico() {
-    const ctx = document.getElementById('graficoVencimentos');
-    if (!ctx) return; // garante que o canvas exista
-
-    // Destroi gráfico anterior se houver
-    if (window.meuGrafico) {
-      window.meuGrafico.destroy();
-    }
-
-    // Exemplo: dados do Firestore (você pode conectar depois)
-    const dados = {
-      labels: ['Mercearia', 'Bebidas', 'Frios', 'Higiene', 'Limpeza', 'Açougue'],
-      datasets: [{
-        label: 'Produtos Vencidos',
-        data: [12, 8, 5, 9, 6, 3],
-        backgroundColor: 'rgba(38, 255, 230, 0.4)',
-        borderColor: '#26ffe6',
-        borderWidth: 2,
-      }]
-    };
-
-    const config = {
-      type: 'bar',
-      data: dados,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { labels: { color: '#26ffe6' } },
-        },
-        scales: {
-          x: { ticks: { color: '#26ffe6' } },
-          y: { ticks: { color: '#26ffe6' } },
-        },
-      },
-    };
-
-    window.meuGrafico = new Chart(ctx, config);
   }
 
-  // Integra com o menu
-  const oldShowSection = showSection;
-  showSection = function (id) {
-    oldShowSection(id);
-    if (id === 'graficos') {
-      setTimeout(atualizarGrafico, 300); // dá tempo da aba abrir
+  document.getElementById("abrirSetor").addEventListener("click", abrirResumoSetor);
+  document.getElementById("fecharSetor").addEventListener("click", () => {
+    document.getElementById("modalSetor").style.display = "none";
+  });
+  </script>
+
+  <script>
+  // --- Menu Hambúrguer ---
+  const sidebar = document.querySelector('.sidebar');
+  const hamburger = document.createElement('button');
+  hamburger.className = 'hamburger';
+  hamburger.textContent = '☰';
+  hamburger.onclick = () => sidebar.classList.toggle('open');
+  document.body.appendChild(hamburger);
+
+  // --- Fundo de partículas ---
+  const canvas = document.getElementById('particleCanvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    const particles = Array.from({length:60},()=>({
+      x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+1,
+      sx:(Math.random()-0.5)*0.6,sy:(Math.random()-0.5)*0.6
+    }));
+    function animate(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p=>{
+        p.x+=p.sx;p.y+=p.sy;
+        if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+        if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+        ctx.fillStyle='rgba(255,255,255,0.07)';
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+      });
+      requestAnimationFrame(animate);
     }
+    animate();
+  }
+
+  // --- Tema Claro/Escuro ---
+  const toggle = document.createElement("button");
+  toggle.id = "toggleTheme";
+  toggle.className = "theme-toggle";
+  toggle.textContent = "🌙";
+  document.body.appendChild(toggle);
+
+  function aplicarTema() {
+    const tema = localStorage.getItem("temaValitec") || "dark";
+    if (tema === "light") {
+      document.documentElement.classList.add("light-mode");
+      toggle.textContent = "🌙";
+    } else {
+      document.documentElement.classList.remove("light-mode");
+      toggle.textContent = "🔆";
+    }
+  }
+  toggle.onclick = () => {
+    const atual = localStorage.getItem("temaValitec") || "dark";
+    const novo = (atual === "dark") ? "light" : "dark";
+    localStorage.setItem("temaValitec", novo);
+    aplicarTema();
   };
-
-</script>
-
-
-
-
-  <script>
-  // === MOSTRAR SEÇÕES DO DASHBOARD ===
-  function showSection(id) {
-    // Esconde todas as seções
-    document.querySelectorAll('main section').forEach(sec => {
-      sec.classList.remove('active');
-    });
-
-    // Mostra a seção clicada
-    const target = document.getElementById(id);
-    if (target) target.classList.add('active');
-
-    // Fecha o menu se estiver aberto (modo mobile)
-    const menu = document.getElementById('menu');
-    if (menu.classList.contains('active')) menu.classList.remove('active');
-  }
-</script>
-
-  <!-- Partículas -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
-  <script>
-    particlesJS.load('particles', 'particles.json', function () {
-      console.log('Particles carregadas!');
-    });
-
+  aplicarTema();
   </script>
-
-
-
 </body>
 </html>
